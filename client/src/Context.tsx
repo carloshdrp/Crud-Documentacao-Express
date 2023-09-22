@@ -10,7 +10,7 @@ export const Context = (props: any) => {
 		axios
 			.get('http://localhost:8080/get-user', { withCredentials: true })
 			.then((res: AxiosResponse) => {
-				if (res.data) {
+				if (res.data && res.data != 'Guest') {
 					console.log(res);
 					setUserObjetct(res.data);
 				}

@@ -90,7 +90,11 @@ app.use('/passaro', exempleRouter);
 app.use('/user', userRouter);
 
 app.get('/get-user', (req, res) => {
-	res.send(req.user);
+	if (req.user) {
+		return res.send(req.user);
+	} else {
+		return res.send('Guest');
+	}
 });
 
 app.listen(PORT, () => {

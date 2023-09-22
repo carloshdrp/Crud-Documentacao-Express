@@ -32,7 +32,6 @@ export const App = () => {
 					<Route path="/" element={<Home />} />
 					<Route path="/docs" element={<Docs />} />
 					<Route path="/login" element={<Login />} />
-					<Route path="/new-article" element={<CreateArticle />} />
 
 					{/*Rotas Aninhadas:*/}
 					{/* <Route path="/posts" element={<Posts />}>
@@ -40,7 +39,9 @@ export const App = () => {
     </Route> */}
 
 					{/*Rotas Privadas:*/}
-					<Route element={<PrivateRoutes />}></Route>
+					<Route element={<PrivateRoutes />}>
+						<Route path="/new-article" element={<CreateArticle />} />
+					</Route>
 
 					{/*Not Found:*/}
 					<Route path="*" element={<NotFound />} />

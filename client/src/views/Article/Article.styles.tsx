@@ -7,4 +7,5 @@ export const Label = styled.h2`
 	font-style: normal;
 	font-weight: 400;
 	line-height: 28px; /* 116.667% */
+	margin-bottom: 10px;
 `;
