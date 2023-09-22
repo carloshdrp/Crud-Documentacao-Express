@@ -1,0 +1,43 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  name     String
+  email    String
+  googleId String  @unique @map(name: "google_id")
+  avatar   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Post Post[] // 1 -> n
+  //Post Post? // 1->1
+
+  @@map(name: "user")
+}
+
+model Post {
+  id      Int    @id @default(autoincrement())
+  title   String
+  content String @db.VarChar(255) // isso ai aumenta o tamanho padrão da string
+
+  author User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // author User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int  @map(name: "user_id") // 1 -> n
+  // userId Int?  @map(name: "user_id") @unique  para 1 -> 1
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map(name: "post")
+}
