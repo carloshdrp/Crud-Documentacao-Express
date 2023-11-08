@@ -20,10 +20,39 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  Post Post[] // 1 -> n
+  Post    Post[] // 1 -> n
   //Post Post? // 1->1
+  Article Article[]
 
   @@map(name: "user")
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  Article   Article[]
+
+  @@map("category")
+}
+
+model Article {
+  id    Int    @id @default(autoincrement())
+  title String @unique
+  file  String @unique
+
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId Int      @map(name: "category_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User @relation(fields: [userId], references: [id])
+  userId Int  @map(name: "user_id")
+
+  @@map("article")
 }
 
 model Post {

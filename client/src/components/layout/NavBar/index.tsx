@@ -1,18 +1,22 @@
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosResponse, AxiosError } from 'axios';
 import { DropDown, NavWrapper, UserWrapper } from './NavBar.styles';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useContext, useState } from 'react';
 import { myContext } from '../../../Context';
 
 export const NavBar = () => {
+	const navigate = useNavigate();
+
 	const logout = async () => {
-		await axios
-			.get('http://localhost:8080/auth/logout', { withCredentials: true })
-			.then((res: AxiosResponse) => {
-				if (res.data === 'sucess') {
-					window.location.href = '/';
-				}
+		try {
+			const response = await axios.get('http://localhost:8080/auth/logout', {
+				withCredentials: true,
 			});
+			localStorage.removeItem('user');
+			return navigate(0);
+		} catch (error: any) {
+			console.error('Error logging out:', error.message);
+		}
 	};
 
 	const context = useContext(myContext);
@@ -32,13 +36,13 @@ export const NavBar = () => {
 			<ul className="custom-container">
 				<li>
 					<Link to="/" style={{ font: "400 36px 'Oxygen', sans-serif" }}>
-						Express{' '}
+						Express
 					</Link>
 				</li>
 				<div className="flex gap-[80px]">
 					<li>
 						<Link
-							to="/docs"
+							to="/article"
 							className="text-[#000000] text-right relative"
 							style={{ font: "600 20px/28px 'Mulish', sans-serif" }}
 						>
@@ -47,7 +51,12 @@ export const NavBar = () => {
 					</li>
 					{context ? (
 						<li onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-							<div className="flex items-end">
+							<div className="flex items-center">
+								<img
+									src={context.avatar}
+									alt="avatar"
+									className="object-fill w-10 h-10 mr-2"
+								/>
 								<UserWrapper
 									style={{ font: "600 20px/28px 'Mulish', sans-serif" }}
 								>
@@ -72,13 +81,20 @@ export const NavBar = () => {
 							</div>
 
 							{isDropdownVisible && (
-								<DropDown className="divide-y-2">
+								<DropDown className="ml-10 divide-y-2">
 									<Link
-										to="/new-article"
+										to="/articles"
 										className="text-left cursor-pointer"
 										style={{ font: "600 20px/28px 'Mulish', sans-serif" }}
 									>
-										Novo Artigo
+										Artigos
+									</Link>
+									<Link
+										to="/categories"
+										className="text-left cursor-pointer"
+										style={{ font: "600 20px/28px 'Mulish', sans-serif" }}
+									>
+										Categorias
 									</Link>
 									<p
 										onClick={logout}

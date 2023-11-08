@@ -1,11 +1,17 @@
 import express from 'express';
 import exempleRouter from './routes/exempleRoute';
 import userRouter from './routes/userRoute';
+import articleRouter from './routes/articleRouter';
+import categoryRouter from './routes/categoryRoute';
 import cors from 'cors';
 import session from 'express-session';
 import passport from 'passport';
 import { prisma } from './database';
 import userController from './controllers/userController';
+import multer from 'multer';
+import * as fs from 'fs';
+import * as path from 'path';
+
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 require('dotenv').config();
@@ -15,9 +21,22 @@ if (!process.env.PORT) {
 
 const PORT: number = parseInt(process.env.PORT);
 
+const storage = multer.diskStorage({
+	destination: function (req, file, cb) {
+		cb(null, './uploads');
+	},
+	filename: function (req, file, cb) {
+		let originalname = path.parse(file.originalname);
+		let newFilename = originalname.name + '-' + Date.now() + originalname.ext;
+		cb(null, newFilename);
+	},
+});
+
+const upload = multer({ storage: storage });
+
 const app = express();
 app.use(express.json());
-app.use(cors({ origin: 'http://127.0.0.1:3000', credentials: true }));
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 app.use(session({ secret: 'jkgnmoe', resave: true, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -62,7 +81,7 @@ app.get(
 	'/auth/google/callback',
 	passport.authenticate('google', { failureRedirect: '/login' }),
 	(req, res) => {
-		res.redirect('http://127.0.0.1:3000/');
+		res.redirect('http://localhost:3000/');
 	}
 );
 
@@ -77,8 +96,8 @@ app.get('/auth/logout', (req, res) => {
 				console.log('Error logging out');
 				return res.status(500).send('Error logging out');
 			}
-			console.log('sucess');
-			return res.send('sucess');
+			console.log('success');
+			return res.send('success');
 		});
 	} else {
 		console.log('No user to log out');
@@ -86,8 +105,12 @@ app.get('/auth/logout', (req, res) => {
 	}
 });
 
+app.use('/files', express.static(path.resolve(__dirname, '../uploads')));
+
 app.use('/passaro', exempleRouter);
 app.use('/user', userRouter);
+app.use('/category', categoryRouter);
+app.use('/article', articleRouter);
 
 app.get('/get-user', (req, res) => {
 	if (req.user) {
@@ -95,6 +118,28 @@ app.get('/get-user', (req, res) => {
 	} else {
 		return res.send('Guest');
 	}
+});
+
+app.post('/file', upload.single('file'), (req, res) => {
+	if (req.file) {
+		res.send({ fileName: req.file.filename });
+	} else {
+		res.status(400).send({ error: 'No file uploaded' });
+	}
+});
+
+app.delete('/file/:filename', (req, res) => {
+	const filename = req.params.filename;
+	const filePath = path.join('./uploads', filename);
+
+	fs.unlink(filePath, (err) => {
+		if (err) {
+			console.error(err);
+			res.status(500).send('Erro ao excluir o arquivo');
+		} else {
+			res.send('Arquivo excluído com sucesso!');
+		}
+	});
 });
 
 app.listen(PORT, () => {

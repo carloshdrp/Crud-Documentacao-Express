@@ -4,10 +4,14 @@ import { CreateArticle } from './views/Article';
 import { Docs } from './views/Docs';
 import { Home } from './views/Home';
 import { Login } from './views/Login';
+import { NewCategory } from './views/NewCategory';
 import { NotFound } from './views/NotFound';
+import { Articles } from './views/Articles';
 import { useContext } from 'react';
 import { myContext } from './Context';
 import { ConfigProvider } from 'antd';
+import { Category } from './views/Category';
+import { Welcome } from './views/Welcome';
 
 export const App = () => {
 	const userObject = useContext(myContext);
@@ -30,7 +34,8 @@ export const App = () => {
 				<Routes>
 					{/*Rota Normal:*/}
 					<Route path="/" element={<Home />} />
-					<Route path="/docs" element={<Docs />} />
+					<Route path="/article" element={<Welcome />} />
+					<Route path="/article/:id" element={<Docs />} />
 					<Route path="/login" element={<Login />} />
 
 					{/*Rotas Aninhadas:*/}
@@ -41,6 +46,10 @@ export const App = () => {
 					{/*Rotas Privadas:*/}
 					<Route element={<PrivateRoutes />}>
 						<Route path="/new-article" element={<CreateArticle />} />
+						<Route path="/articles" element={<Articles />} />
+						<Route path="/categories" element={<Category />} />
+						<Route path="/category/new" element={<NewCategory />} />
+						<Route path="/category/new/:update" element={<NewCategory />} />
 					</Route>
 
 					{/*Not Found:*/}

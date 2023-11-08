@@ -1,77 +1,146 @@
-import { Layout } from '../../components/layout';
-import { Link } from 'react-router-dom';
+import { Layout } from 'components/layout';
+import { Link, useNavigate } from 'react-router-dom';
 import { Label } from './Article.styles';
-import { Input, Select, UploadFile, UploadProps, message } from 'antd';
+import {
+	Button,
+	Form,
+	Input,
+	Select,
+	Upload,
+	UploadFile,
+	UploadProps,
+	message,
+} from 'antd';
 import Dragger from 'antd/es/upload/Dragger';
 import { InboxOutlined } from '@ant-design/icons';
-import { useState } from 'react';
+import axios from 'axios';
+import { useState, useEffect } from 'react';
+import { UploadChangeParam } from 'antd/es/upload';
 
 export const CreateArticle = () => {
-	const [fileList, setFileList] = useState<UploadFile[]>([]);
+	const [articles, setArticles] = useState([]);
+
+	useEffect(() => {
+		axios
+			.get('http://localhost:8080/article')
+			.then((response) => {
+				setArticles(response.data.articles);
+			})
+			.catch((error) => {
+				console.error(error);
+				message.error('Erro ao buscar os artigos!');
+			});
+	}, []);
+
+	const [categories, setCategories] = useState([]);
+	const navigate = useNavigate();
+
+	useEffect(() => {
+		axios
+			.get('http://localhost:8080/category')
+			.then((response) => {
+				setCategories(
+					response.data.categories.map((category) => ({
+						value: category.id,
+						label: category.name,
+					}))
+				);
+			})
+			.catch((error) => {
+				console.error(error);
+			});
+	}, []);
+
+	const [uploadedFile, setUploadedFile] = useState(null);
+
+	const deleteFile = (filename) => {
+		axios.delete(`http://localhost:8080/file/${filename}`).catch((error) => {
+			console.error(error);
+		});
+	};
 
 	const props: UploadProps = {
 		name: 'file',
-		fileList,
 		maxCount: 1,
 		accept: '.md',
-		action: 'https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188',
-		beforeUpload(file: UploadFile) {
-			const isMD = file.type === 'text/markdown';
+		action: 'http://localhost:8080/file',
+
+		async beforeUpload(file: UploadFile) {
+			const isMD: boolean =
+				file.type === 'text/markdown' ||
+				file.name.endsWith('.md') ||
+				file.name.endsWith('.markdown');
 			if (!isMD) {
-				setFileList((state) => [...state]);
-				message.error('O arquivo deve ser Markdown (.md)');
-				return false;
+				await message.error(`${file.name} não é um arquivo Markdown.`);
 			}
-			setFileList((state) => [...state, file]);
+			return isMD || Upload.LIST_IGNORE;
+		},
+		onChange: (info: UploadChangeParam) => {
+			const { status, response } = info.file;
+			if (status !== 'uploading') {
+				console.log(info.file, info.fileList);
+			}
+			if (status === 'done') {
+				if (uploadedFile) {
+					deleteFile(uploadedFile);
+				}
+				setUploadedFile(response.fileName);
+				message.success(`${info.file.name} foi enviado com sucesso.`);
+			} else if (status === 'error') {
+				message.error(`Não foi possível enviar o arquivo ${info.file.name}.`);
+			}
 		},
 		onRemove: (file: UploadFile) => {
-			if (fileList.some((item) => item.uid === file.uid)) {
-				setFileList((fileList) =>
-					fileList.filter((item) => item.uid !== file.uid)
-				);
-				return true;
+			if (uploadedFile) {
+				deleteFile(uploadedFile);
 			}
-			return false;
+			setUploadedFile(null);
 		},
-		async onChange(info) {
-			try {
-				const { status } = info.file;
-				if (status !== 'uploading') {
-					console.log(info.file, info.fileList);
-				}
-				if (status === 'done') {
-					await message.success(`${info.file.name} foi enviado com sucesso.`);
-				} else if (status === 'error') {
-					await message.error(
-						`Não foi possível enviar o arquivo ${info.file.name}.`
-					);
-				}
-			} catch (error) {
-				console.error(error);
+	};
+
+	const onFinish = async (values: any) => {
+		const userData = JSON.parse(localStorage.getItem('user'));
+
+		const { title, category } = values;
+		const file = uploadedFile;
+		const user = userData.id;
+
+		const data = {
+			title,
+			category,
+			file,
+			user,
+		};
+
+		try {
+			const response = await axios.post(
+				'http://localhost:8080/article/new',
+				data
+			);
+			if (response.data.error === false) {
+				message.success('Artigo criado com sucesso!');
+				navigate('/articles');
+			} else {
+				throw new Error(response.data.message);
 			}
-		},
-		onDrop(e) {
-			console.log('Dropped files', e.dataTransfer.files);
-		},
+		} catch (error) {
+			return message.error(error.message);
+		}
 	};
 
-	const onChange = (value: string) => {
-		console.log(`selected ${value}`);
-	};
-
-	const onSearch = (value: string) => {
-		console.log('search:', value);
-	};
-
-	// Filter `option.label` match the user type `input`
 	const filterOption = (
 		input: string,
-		option: { label: string; value: string }
-	) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
+		option?: { label: string; value: string }
+	) => {
+		if (option) {
+			return option.label.toLowerCase().includes(input.toLowerCase());
+		}
+		return false;
+	};
 
 	return (
 		<Layout>
-			<div className="h-[92vh] overflow-hidden w-full flex flex-col justify-center items-center">
+			<div className="flex flex-col items-center justify-center w-full my-4 ">
 				<h1 className="mb-2 text-5xl font-bold text-center">
 					Crie um novo artigo 🗒️
 				</h1>
@@ -84,39 +153,74 @@ export const CreateArticle = () => {
 						clicando aqui
 					</Link>
 				</p>
-				<form action="/" className="w-[600px] flex flex-col gap-[20px]">
-					<label htmlFor="title" className="mb-[20px]">
-						<Label>Título do artigo:</Label>
+				<Form
+					layout="vertical"
+					name="create-article"
+					scrollToFirstError
+					style={{ width: 600 }}
+					onFinish={onFinish}
+				>
+					<Form.Item
+						className="mb-[20px]"
+						name="title"
+						label={<Label>Título do artigo</Label>}
+						hasFeedback
+						rules={[
+							{
+								type: 'string',
+								message: 'O título precisa ser uma string!',
+							},
+							{
+								required: true,
+								message: 'O título é obrigatório!',
+							},
+							{
+								validator: (_, value) =>
+									articles.some(
+										(article) =>
+											article.title.toLowerCase() === value.toLowerCase()
+									)
+										? Promise.reject(
+												new Error('Já existe um artigo com esse título!')
+										  )
+										: Promise.resolve(),
+							},
+						]}
+					>
 						<Input placeholder="Digite aqui..." />
-					</label>
-					<label htmlFor="class" className="mb-[20px]">
-						<Label>Categoria do Artigo:</Label>
+					</Form.Item>
+					<Form.Item
+						label={<Label>Categoria do Artigo:</Label>}
+						name="category"
+						hasFeedback
+						extra={<Link to="/categories">Gerenciar as categorias</Link>}
+						rules={[
+							{
+								required: true,
+								message: 'A categoria é obrigatória!',
+							},
+						]}
+					>
 						<Select
 							showSearch
 							placeholder="Selecione a categoria"
 							optionFilterProp="children"
-							onChange={onChange}
-							onSearch={onSearch}
 							className="w-full"
 							filterOption={filterOption}
-							options={[
-								{
-									value: 'jack',
-									label: 'Jack',
-								},
-								{
-									value: 'lucy',
-									label: 'Lucy',
-								},
-								{
-									value: 'tom',
-									label: 'Tom',
-								},
-							]}
+							options={categories}
 						/>
-					</label>
-					<label htmlFor="file" className="mb-[20px]">
-						<Label>Arquivo Markdown:</Label>
+					</Form.Item>
+					<Form.Item
+						label={<Label>Arquivo Markdown:</Label>}
+						tooltip="Veja como começar na página de documentação."
+						name="file"
+						rules={[
+							{
+								required: true,
+								message: 'O arquivo é obrigatório!',
+							},
+						]}
+					>
 						<Dragger {...props}>
 							<p className="ant-upload-drag-icon">
 								<InboxOutlined />
@@ -125,11 +229,16 @@ export const CreateArticle = () => {
 								Aperte ou solte um arquivo para enviar
 							</p>
 							<p className="ant-upload-hint">
-								Siga as normas de conduta para cadastrar um novo artigo.
+								Siga as normas de formatação para enviar um arquivo.
 							</p>
-						</Dragger>{' '}
-					</label>
-				</form>
+						</Dragger>
+					</Form.Item>
+					<Form.Item>
+						<Button className="w-full" htmlType="submit">
+							Adicionar
+						</Button>
+					</Form.Item>
+				</Form>
 			</div>
 		</Layout>
 	);

@@ -1,7 +1,6 @@
 import { Layout } from '../../components/layout';
-import { Link } from 'react-router-dom';
-import { LoginWrapper } from './Login.styles';
-import googleImage from '../../assets/google.png';
+import { GoogleOutlined } from '@ant-design/icons';
+import { Button } from 'antd';
 
 export const Login = () => {
 	const googleLogin = () => {
@@ -14,10 +13,14 @@ export const Login = () => {
 				<h2 className="mb-2 text-3xl font-bold">
 					Faça login com sua conta google
 				</h2>
-				<LoginWrapper onClick={googleLogin}>
-					<img src={googleImage} alt="google" />
-					<p>Entrar</p>
-				</LoginWrapper>
+				<Button
+					onClick={googleLogin}
+					size="large"
+					icon={<GoogleOutlined />}
+					className="w-64"
+				>
+					Entrar
+				</Button>
 			</div>
 		</Layout>
 	);

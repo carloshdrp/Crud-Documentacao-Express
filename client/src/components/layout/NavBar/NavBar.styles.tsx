@@ -43,6 +43,8 @@ export const DropDown = styled.div`
 	box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 	position: absolute;
 	padding: 4px 8px;
+	display: flex;
+	flex-direction: column;
 
 	a:hover {
 		text-decoration: none;
