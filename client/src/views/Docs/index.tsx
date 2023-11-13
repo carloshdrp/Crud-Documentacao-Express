@@ -14,7 +14,8 @@ import Markdown from 'markdown-to-jsx';
 import { ReactNode, useEffect, useState } from 'react';
 import Code from '../../components/Code';
 import { Menu } from '../../components/Menu';
-import { useParams } from 'react-router-dom';
+import { FloatButton } from 'antd';
+import { useParams, useNavigate } from 'react-router-dom';
 
 export const Docs = () => {
 	const [postContent, setPostContent] = useState('');
@@ -23,12 +24,20 @@ export const Docs = () => {
 	const [formattedDate, setFormattedDate] = useState('');
 
 	const { id } = useParams();
+	const navigate = useNavigate();
 
 	useEffect(() => {
-		fetch(`http://localhost:8080/article/${id}`)
-			.then((response) => response.json())
-			.then((data) => {
+		const fetchData = async () => {
+			try {
+				console.log('ID:', id);
+				if (!id) {
+					navigate('/article');
+				}
+				const response = await fetch(`http://localhost:8080/article/${id}`);
+				const data = await response.json();
+
 				setArticle(data.article);
+
 				const date = new Date(data.article.updatedAt);
 				const formatted = new Intl.DateTimeFormat('pt-BR', {
 					day: '2-digit',
@@ -36,21 +45,27 @@ export const Docs = () => {
 					year: 'numeric',
 				}).format(date);
 				setFormattedDate(formatted);
-				return fetch(`http://localhost:8080/user/${data.article.userId}`);
-			})
-			.then((response) => response.json())
-			.then((data) => {
-				setUser(data.user);
-				return fetch(`http://localhost:8080/files/${article.file}`);
-			})
-			.then((response) => response.text())
-			.then((content) => {
-				setPostContent(content);
-			})
-			.catch((error) => {
-				// eslint-disable-next-line no-console
+
+				const userResponse = await fetch(
+					`http://localhost:8080/user/${data.article.userId}`
+				);
+				const userData = await userResponse.json();
+				setUser(userData.user);
+
+				if (data.article) {
+					const fileResponse = await fetch(
+						`http://localhost:8080/files/${data.article.file}`
+					);
+					const content = await fileResponse.text();
+					setPostContent(content);
+				}
+			} catch (error) {
 				console.error('Erro ao carregar o arquivo Markdown:', error);
-			});
+				navigate('/article');
+			}
+		};
+
+		fetchData();
 	}, [id]);
 
 	interface CodeProps {

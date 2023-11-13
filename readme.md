@@ -18,6 +18,7 @@ npm install
 ```shell
 npx tsc --init
 npx prisma init
+npx prisma db seed
 ```
 
 `DATABASE_URL="postgresql://postgres:postgres@localhost:5432/express?schema=public"`
