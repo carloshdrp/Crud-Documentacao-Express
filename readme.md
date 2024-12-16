@@ -36,3 +36,7 @@ Instale as dependências: ```npm install```
 Configure as variáveis de ambiente
 Execute as migrações do Prisma: ```npx prisma migrate dev```
 Inicie os servidores de desenvolvimento: ```npm run dev```
+
+### Preview
+![Home](https://raw.githubusercontent.com/carloshdrp/Crud-Documentacao-Express/refs/heads/main/Express%20Home.png)
+![Artigo](https://raw.githubusercontent.com/carloshdrp/Crud-Documentacao-Express/refs/heads/main/Express%20Article.png)
