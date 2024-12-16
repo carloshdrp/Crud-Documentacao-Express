@@ -1,4 +1,4 @@
-import axios, { AxiosResponse, AxiosError } from 'axios';
+import axios from 'axios';
 import { DropDown, NavWrapper, UserWrapper } from './NavBar.styles';
 import { Link, useNavigate } from 'react-router-dom';
 import { useContext, useState } from 'react';
@@ -9,7 +9,7 @@ export const NavBar = () => {
 
 	const logout = async () => {
 		try {
-			const response = await axios.get('http://localhost:8080/auth/logout', {
+			await axios.get('http://localhost:8080/auth/logout', {
 				withCredentials: true,
 			});
 			localStorage.removeItem('user');
@@ -20,6 +20,7 @@ export const NavBar = () => {
 	};
 
 	const context = useContext(myContext);
+	console.log(context);
 
 	const [isDropdownVisible, setDropdownVisible] = useState(false);
 
@@ -55,7 +56,7 @@ export const NavBar = () => {
 								<img
 									src={context.avatar}
 									alt="avatar"
-									className="object-fill w-10 h-10 mr-2"
+									className="object-fill w-10 h-10 mr-2 rounded-full"
 								/>
 								<UserWrapper
 									style={{ font: "600 20px/28px 'Mulish', sans-serif" }}
